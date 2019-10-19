@@ -25,17 +25,30 @@ private:
 	//根结点
 	TreeNode<T> *root;
 
+private:
 	//判断同构的内部封装
 	bool Isomorphic_P(const TreeNode<T>* Root1 , const TreeNode<T>* Root2);
 	
 	//复制函数的内部封装
 	TreeNode<T> *CopyTree(const TreeNode<T> *Root , TreeNode<T> *cur);
+
+	//封装创建二叉树
+	void CreateBinaryTree1();
+
+	//封装通过文件创建二叉树
+	bool CreateBinaryTree2(string path);
+
+	//封装通过前序+中序确定二叉树
+	TreeNode<T>* CreateBinaryTree3(int pos1, int pos2, int num, T pre[], T in[], TreeNode<T> *cur);
+
 public:
 	BinaryTree();
 
 	BinaryTree(string path);
 
 	BinaryTree(const BinaryTree<T> &tree);
+
+	BinaryTree(T pre[], T in[], int num);
 
 	~BinaryTree();
 
@@ -108,41 +121,38 @@ public:
 	//修改指定元素的数据域
 	bool Modify(TreeNode<T> *Node, T &Data);
 
-	//创建二叉树
-	void CreatBinaryTree();
-
-	//通过文件创建二叉树
-	bool CreatBinaryTree(string path);
-
 	//输出形式
 	void OutputFormat();
 
 	//判断二叉树同构的API,参数为二叉树根结点
 	bool Isomorphic(const BinaryTree<T> &tree);
-
-	//通过前序+中序确定二叉树
-	//void CreateBinaryTree();
-
 };
 
+//-------------------------------------------------------内部封装方法------------------------------------------------------
 template<class T>
-inline BinaryTree<T>::BinaryTree()
+inline bool BinaryTree<T>::Isomorphic_P(const TreeNode<T>* Root1, const TreeNode<T>* Root2)
 {
-	root = nullptr;
-	//CreatBinaryTree();
-}
+	//情形一：两者皆为空
+	if (Root1 == nullptr && Root2 == nullptr) return true;
 
-template<class T>
-inline BinaryTree<T>::BinaryTree(string path)
-{
-	root = nullptr;
-	CreatBinaryTree(path);
-}
+	//情形二：一个为空，一个不为空
+	if ((Root1 == nullptr && Root2 != nullptr) || (Root1 != nullptr && Root2 == nullptr)) return false;
 
-template<class T>
-inline BinaryTree<T>::BinaryTree(const BinaryTree<T>& tree)
-{
-	root = CopyTree(tree.root, this->root);
+	//情形三:两者根结点不同
+	if (Root1->data != Root2->data) return false;
+
+	//情形四：左子树均为空,比较右子树是否同构
+	if (Root1->leftchild == nullptr && Root2->leftchild == nullptr)
+		return Isomorphic_P(Root1->rightchild, Root2->rightchild);
+
+	//情形五：左子树不为空，且左孩子相同
+	if (Root1->leftchild != nullptr && Root2->leftchild != nullptr && Root1->leftchild->data == Root2->leftchild->data)
+		return (Isomorphic_P(Root1->leftchild, Root2->leftchild) && Isomorphic_P(Root1->rightchild, Root2->rightchild));
+
+	//情形六：左子树不为空，且左孩子不同
+	else
+		return (Isomorphic_P(Root1->leftchild, Root2->rightchild) && Isomorphic_P(Root1->rightchild, Root2->leftchild));
+
 }
 
 template<class T>
@@ -163,11 +173,182 @@ inline TreeNode<T> *BinaryTree<T>::CopyTree(const TreeNode<T> *Root, TreeNode<T>
 		//复制prarent指针
 		newnode->parent = cur;
 		//复制左子树
-		newnode->leftchild = CopyTree(Root->leftchild,newnode);
+		newnode->leftchild = CopyTree(Root->leftchild, newnode);
 		//复制右子树
-		newnode->rightchild = CopyTree(Root->rightchild,newnode);
+		newnode->rightchild = CopyTree(Root->rightchild, newnode);
 	}
 	return newnode;
+}
+
+template<class T>
+inline void BinaryTree<T>::CreateBinaryTree1()
+{
+	cout << "正在执行二叉树的创建过程..." << endl;
+
+	cout << "请输入空结点标志:";
+	T Symbol;
+	cin >> Symbol;
+
+	cout << "请输入二叉树的深度：";
+	int n;
+	cin >> n;
+
+
+	TreeNode<T> *cur;
+	Queue<TreeNode<T> *> q(20);
+
+	//第一层
+	cout << "请输入第1层的节点数据(为空则输入子定义标志)：" << endl;
+	T tem;
+	cin >> tem;
+	cur = new TreeNode<T>(tem);
+	root = cur;
+	q.push(cur);
+
+	//二层及以上
+	for (int i = 2; i <= n; i++)
+	{
+		cout << "请输入第" << i << "层的节点数据(为空则输入子定义标志)：" << endl;
+
+		for (int j = 1; j <= pow(2, i - 2); j++)
+		{
+			T L_tem, R_tem;
+			cin >> L_tem >> R_tem;
+			TreeNode<T> *rootNode = q.pop();
+
+			if (L_tem == Symbol)
+			{
+				rootNode->leftchild == nullptr;
+			}
+			else
+			{
+				cur = new TreeNode<T>(L_tem);
+				rootNode->leftchild = cur;
+				rootNode->leftchild->parent = rootNode;
+				q.push(cur);
+			}
+			if (R_tem == Symbol)
+			{
+				rootNode->rightchild == nullptr;
+			}
+			else
+			{
+				cur = new TreeNode<T>(R_tem);
+				rootNode->rightchild = cur;
+				rootNode->rightchild->parent = rootNode;
+				q.push(cur);
+			}
+		}
+	}
+}
+
+template<class T>
+inline bool BinaryTree<T>::CreateBinaryTree2(string path)
+{
+	ifstream cin(path.c_str());
+
+	T Symbol;
+	cin >> Symbol;
+
+	int n;
+	cin >> n;
+
+
+	TreeNode<T> *cur;
+	Queue<TreeNode<T> *> q(20);
+
+	//第一层
+	T tem;
+	cin >> tem;
+	cur = new TreeNode<T>(tem);
+	root = cur;
+	q.push(cur);
+
+	//二层及以上
+	for (int i = 2; i <= n; i++)
+	{
+		for (int j = 1; j <= pow(2, i - 2); j++)
+		{
+			T L_tem, R_tem;
+			cin >> L_tem >> R_tem;
+			TreeNode<T> *rootNode = q.pop();
+
+			if (L_tem == Symbol)
+			{
+				rootNode->leftchild == nullptr;
+			}
+			else
+			{
+				cur = new TreeNode<T>(L_tem);
+				rootNode->leftchild = cur;
+				rootNode->leftchild->parent = rootNode;
+				q.push(cur);
+			}
+			if (R_tem == Symbol)
+			{
+				rootNode->rightchild == nullptr;
+			}
+			else
+			{
+				cur = new TreeNode<T>(R_tem);
+				rootNode->rightchild = cur;
+				rootNode->rightchild->parent = rootNode;
+				q.push(cur);
+			}
+		}
+	}
+	return true;
+}
+
+template<class T>
+inline TreeNode<T>* BinaryTree<T>::CreateBinaryTree3(int pos1, int pos2, int num, T pre[], T in[], TreeNode<T> *cur)
+{
+	//前序确定根结点、子树根结点
+	//中序确定左右子树
+	//不断使用左右子树递归获得结果
+
+	TreeNode<T> * p = nullptr;
+
+	for (int i = 0; i < num; i++)
+	{
+		if (pre[pos1] == in[pos2 + i])
+		{
+			p = new TreeNode<T>(pre[pos1]);
+			p->parent = cur;
+			p->leftchild = CreateBinaryTree3(pos1 + 1, pos2, i, pre, in, p);
+			p->rightchild = CreateBinaryTree3(pos1 + i + 1, pos2 + i + 1, num - i - 1, pre, in, p);
+			return p;
+		}
+	}
+	return p;
+
+}
+//------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------外部 API--------------------------------------------------------
+template<class T>
+inline BinaryTree<T>::BinaryTree()
+{
+	root = nullptr;
+	CreateBinaryTree1();
+}
+
+template<class T>
+inline BinaryTree<T>::BinaryTree(string path)
+{
+	root = nullptr;
+	CreateBinaryTree2(path);
+}
+
+template<class T>
+inline BinaryTree<T>::BinaryTree(const BinaryTree<T>& tree)
+{
+	root = CopyTree(tree.root, this->root);
+}
+
+template<class T>
+inline BinaryTree<T>::BinaryTree(T pre[], T in[],int num)
+{
+	root=CreateBinaryTree3(0, 0, num, pre, in, root);
 }
 
 template<class T>
@@ -515,126 +696,6 @@ inline bool BinaryTree<T>::Modify(TreeNode<T>* Node, T & Data)
 }
 
 template<class T>
-inline void BinaryTree<T>::CreatBinaryTree()
-{
-	cout << "正在执行二叉树的创建过程..." << endl;
-
-	cout << "请输入空结点标志:";
-	T Symbol;
-	cin >> Symbol;
-
-	cout << "请输入二叉树的深度：";
-	int n;
-	cin >> n;
-
-	
-	TreeNode<T> *cur;
-	Queue<TreeNode<T> *> q(20);
-
-	//第一层
-	cout << "请输入第1层的节点数据(为空则输入子定义标志)：" << endl;
-	T tem;
-	cin >> tem;
-	cur = new TreeNode<T>(tem);
-	root = cur;
-	q.push(cur);
-
-	//二层及以上
-	for (int i = 2; i <= n; i++)
-	{
-		cout << "请输入第" << i << "层的节点数据(为空则输入子定义标志)：" << endl;
-		
-		for (int j = 1; j <= pow(2,i - 2); j++)
-		{
-			T L_tem, R_tem;
-			cin >> L_tem >> R_tem;
-			TreeNode<T> *rootNode = q.pop();
-
-			if (L_tem == Symbol)
-			{
-				rootNode->leftchild == nullptr;
-			}
-			else
-			{
-				cur = new TreeNode<T>(L_tem);
-				rootNode->leftchild = cur;
-				rootNode->leftchild->parent = rootNode;
-				q.push(cur);
-			}
-			if (R_tem == Symbol)
-			{
-				rootNode->rightchild == nullptr;
-			}
-			else
-			{
-				cur = new TreeNode<T>(R_tem);
-				rootNode->rightchild = cur;
-				rootNode->rightchild->parent = rootNode;
-				q.push(cur);
-			}
-		}
-	}
-}
-
-template<class T>
-inline bool BinaryTree<T>::CreatBinaryTree(string path)
-{
-	ifstream cin(path.c_str());
-
-	T Symbol;
-	cin >> Symbol;
-
-	int n;
-	cin >> n;
-
-
-	TreeNode<T> *cur;
-	Queue<TreeNode<T> *> q(20);
-
-	//第一层
-	T tem;
-	cin >> tem;
-	cur = new TreeNode<T>(tem);
-	root = cur;
-	q.push(cur);
-
-	//二层及以上
-	for (int i = 2; i <= n; i++)
-	{
-		for (int j = 1; j <= pow(2, i - 2); j++)
-		{
-			T L_tem, R_tem;
-			cin >> L_tem >> R_tem;
-			TreeNode<T> *rootNode = q.pop();
-
-			if (L_tem == Symbol)
-			{
-				rootNode->leftchild == nullptr;
-			}
-			else
-			{
-				cur = new TreeNode<T>(L_tem);
-				rootNode->leftchild = cur;
-				rootNode->leftchild->parent = rootNode;
-				q.push(cur);
-			}
-			if (R_tem == Symbol)
-			{
-				rootNode->rightchild == nullptr;
-			}
-			else
-			{
-				cur = new TreeNode<T>(R_tem);
-				rootNode->rightchild = cur;
-				rootNode->rightchild->parent = rootNode;
-				q.push(cur);
-			}
-		}
-	}
-	return true;
-}
-
-template<class T>
 inline void BinaryTree<T>::OutputFormat()
 {
 	TreeNode<T> *node = root;
@@ -666,33 +727,6 @@ inline bool BinaryTree<T>::Isomorphic(const BinaryTree<T> &tree)
 {
 	return Isomorphic_P(tree.root,this->root);
 }
-
-template<class T>
-inline bool BinaryTree<T>::Isomorphic_P(const TreeNode<T>* Root1, const TreeNode<T>* Root2)
-{
-	//情形一：两者皆为空
-	if (Root1 == nullptr && Root2 == nullptr) return true;
-
-	//情形二：一个为空，一个不为空
-	if ((Root1 == nullptr && Root2 != nullptr) || (Root1 != nullptr && Root2 == nullptr)) return false;
-
-	//情形三:两者根结点不同
-	if (Root1->data != Root2->data) return false;
-
-	//情形四：左子树均为空,比较右子树是否同构
-	if (Root1->leftchild == nullptr && Root2->leftchild == nullptr)
-		return Isomorphic_P(Root1->rightchild,Root2->rightchild);
-
-	//情形五：左子树不为空，且左孩子相同
-	if (Root1->leftchild != nullptr && Root2->leftchild != nullptr && Root1->leftchild->data == Root2->leftchild->data)
-		return (Isomorphic_P(Root1->leftchild, Root2->leftchild) && Isomorphic_P(Root1->rightchild, Root2->rightchild));
-
-	//情形六：左子树不为空，且左孩子不同
-	else
-		return (Isomorphic_P(Root1->leftchild, Root2->rightchild) && Isomorphic_P(Root1->rightchild, Root2->leftchild));
-
-}
-
 
 #endif
 
