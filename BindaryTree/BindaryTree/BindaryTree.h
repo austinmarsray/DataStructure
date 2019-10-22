@@ -583,7 +583,7 @@ inline int BinaryTree<T>::GetHight()
 template<class T>
 inline int BinaryTree<T>::GetNodeHeight(TreeNode<T>* Node)
 {
-	int nodeheight=0;
+	int nodeheight=1;
 	while (Node->parent != nullptr)
 	{
 		nodeheight++;
@@ -706,7 +706,7 @@ inline void BinaryTree<T>::OutputFormat()
 	{
 		while (node != nullptr)
 		{
-			for (int i = 1; i <= GetNodeHeight(node); i++)
+			for (int i = 1; i <= GetNodeHeight(node)-1; i++)
 			{
 				cout << "    ";
 			}
