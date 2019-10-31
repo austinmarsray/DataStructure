@@ -31,6 +31,10 @@ public:
 	{
 		delete leftchild, rightchild;
 	}
+	T show()
+	{
+		return data;
+	}
 
 	template<class T> friend class BinarySearchTree;
 };
@@ -60,7 +64,7 @@ private:
 	//≤„–Ú±È¿˙
 	void levelOrder(BSTNode<T>* node);
 public:
-	BinarySearchTree();
+	BinarySearchTree(bool Is=false);
 
 	BinarySearchTree(string path);
 
@@ -281,10 +285,12 @@ inline void BinarySearchTree<T>::levelOrder(BSTNode<T>* node)
 //------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------Õ‚≤ø API--------------------------------------------------------
 template<class T>
-inline BinarySearchTree<T>::BinarySearchTree()
+inline BinarySearchTree<T>::BinarySearchTree(bool Is)
 {
 	root = nullptr;
-	CreateBST();
+
+	if(Is==true)
+		CreateBST();
 }
 
 template<class T>
